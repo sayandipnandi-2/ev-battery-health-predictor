@@ -1,0 +1,5 @@
+Feature set,Accuracy,Evaluation
+Original (incl. cycle/current/full discharge),0.845,Leave-one-battery-out
+Refined (partial-curve) - FINAL,0.764,Leave-one-battery-out
+Baseline-normalised,0.725,Leave-one-battery-out
+Random 80/20 split (optimistic),0.977,Random split
