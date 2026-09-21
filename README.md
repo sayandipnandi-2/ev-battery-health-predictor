@@ -33,7 +33,7 @@ ev-battery-health-predictor/
 
 ## 🔬 Methodology
 1. **Data preparation:** load `metadata.csv`, summarise each discharge cycle and compute SoH from capacity.
-2. **Labelling:** map SoH to Healthy / Degrading / Critical.
+2. 2. **Labelling:** Healthy (SoH ≥ 80%), Degrading (70–80%), Critical (< 70%).
 3. **Feature engineering:** time to voltage thresholds and temperature features.
 4. **Leakage control:** drop cycle number and similar age-revealing inputs.
 5. **Modelling:** Random Forest classifier.
@@ -47,6 +47,41 @@ cd ev-battery-health-predictor
 pip install -r requirements.txt
 python ev_battery_healt_predictor.py
 ```
+## 📊 Results
+
+### Data
+636 discharge cycles from 4 batteries (B0005, B0006, B0007, B0018): 283 Healthy, 222 Degrading and 131 Critical.
+
+![Health status distribution](outputs/chart_health_distribution.png)
+
+![SoH vs cycle number](outputs/chart_soh_vs_cycle.png)
+
+### Model comparison
+| Feature set | Accuracy | Evaluation |
+|---|---|---|
+| Original (incl. cycle, current, full discharge) | 84.5% | Leave-one-battery-out |
+| **Refined (partial-curve), final model** | **76.4%** | Leave-one-battery-out |
+| Baseline-normalised | 72.5% | Leave-one-battery-out |
+| Random 80/20 split | 97.7% | Random split (optimistic) |
+
+The random split looks far better (97.7%) because cycles from the same battery appear in both training and test sets. Testing on a completely unseen battery gives the realistic figure. The original feature set included cycle number, current and full-discharge features, while the final model uses partial-curve features (time to voltage thresholds, start voltage and temperature), giving a more realistic estimate at lower accuracy.
+
+### Final model: confusion matrix (leave-one-battery-out, all 636 cycles)
+![Final confusion matrix](outputs/confusion_matrix_final.png)
+
+- **Healthy:** 270 of 283 cycles correct (about 95%).
+- **Degrading:** 161 of 222 correct (about 73%).
+- **Critical:** 59 of 131 correct (about 45%); most misses are predicted as Degrading.
+- Healthy cycles are never predicted as Critical, so errors stay between neighbouring classes.
+
+### Feature importance (original feature set)
+![Feature importance](outputs/chart_feature_importance.png)
+
+### Limitations
+- Only four batteries, so results may not generalise to other cells.
+- The Critical class is the hardest to detect, which matters most for safety.
+
+
 
 ## 🔭 Future Work
 - Test on more batteries and chemistries
